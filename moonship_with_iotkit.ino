@@ -28,6 +28,17 @@
 #include <Wire.h>
 #include "MMA7660.h"
 
+#define MotorSpeedSet             0x82
+#define PWMFrequenceSet           0x84
+#define DirectionSet              0xaa
+#define MotorSetA                 0xa1
+#define MotorSetB                 0xa5
+#define Nothing                   0x01
+#define EnableStepper             0x1a
+#define UnenableStepper           0x1b
+#define Stepernu                  0x1c
+#define I2CMotorDriverAdd         0x0f   // Set the address of the I2CMotorDriver
+
 #define READ_DATA_DELAY_TIME_MS_PER_LOOP  100
 #define REPORT_DATA_TO_CLOUD_EVERY_N_LOOP  30
 unsigned long loopCounter = 0;
@@ -62,16 +73,17 @@ void setup() {
   pinMode(TEMP_PIN, INPUT);
 
  // initialize serial communication at 9600 bits per second:
-  Serial.begin(57600);
+  Serial.begin(9600);
   
   bar.begin();
   iotkit.begin();
   Wire.begin();  
   accelemeter.init();
-  //MotorSpeedSetAB(0, 0); //defines the speed of motor 1 and motor 2;
 
   // wait some time till initialzation finish.
   delay(3000);
+
+  startMotor();
 }
 
 // the loop routine runs over and over again forever:
@@ -180,6 +192,7 @@ void processSound(int value) {
 
   //shake when detect sounds
   if (value > 250) {
+    startMotor();
     Serial.println("Crying...");
     digitalWrite(RELAY_PIN, HIGH);
     //MotorSpeedSetAB(100, 100); //defines the speed of motor 1 and motor 2;
@@ -192,6 +205,7 @@ void processSound(int value) {
       shakeCounter = 0;
       digitalWrite(RELAY_PIN, LOW);
       // MotorSpeedSetAB(0, 0);
+      stopMotor();
     }
   }
 
@@ -244,8 +258,6 @@ void startMotor() {
   //digitalWrite(RELAY_PIN, HIGH);
   
   MotorSpeedSetAB(100, 100); //defines the speed of motor 1 and motor 2;
-  //delay(10); //this delay needed
-  //MotorDirectionSet(0b1010);  //"0b1010" defines the output polarity, "10" means the M+ is "positive" while the M- is "negtive"
 }
 
 void stopMotor() {
@@ -255,16 +267,6 @@ void stopMotor() {
   MotorSpeedSetAB(0, 0); 
 }
 
-#define MotorSpeedSet             0x82
-#define PWMFrequenceSet           0x84
-#define DirectionSet              0xaa
-#define MotorSetA                 0xa1
-#define MotorSetB                 0xa5
-#define Nothing                   0x01
-#define EnableStepper             0x1a
-#define UnenableStepper           0x1b
-#define Stepernu                  0x1c
-#define I2CMotorDriverAdd         0x0f   // Set the address of the I2CMotorDriver
 // set the steps you want, if 255, the stepper will rotate continuely;
 void SteperStepset(unsigned char stepnu)
 {
